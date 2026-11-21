@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="ht"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Terravue Test</title>
+<title>Terravue Dyagnostik</title>
 <style>body{font-family:sans-serif;padding:16px;max-width:480px;margin:auto}input,button{width:100%;padding:12px;margin:6px 0;font-size:16px;box-sizing:border-box}pre{white-space:pre-wrap;word-break:break-word;font-size:12px;background:#eee;color:#111;padding:8px}</style></head>
 <body>
-<h2>Terravue – Test</h2>
+<h2>Terravue – Dyagnostik</h2>
 <div id="login">
-<input id="e" type="email" placeholder="Imèl">
-<input id="p" type="password" placeholder="Modpas">
+<input id="e" type="text" placeholder="Imèl" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off">
+<input id="p" type="text" placeholder="Modpas (vizib)" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off">
 <button id="go">Konekte</button>
 </div>
 <div id="app" style="display:none">
@@ -23,7 +23,6 @@ const sb=window.supabase.createClient(URL_,KEY);
 const $=id=>document.getElementById(id);
 const log=t=>{$('log').textContent+=t+'\n'};
 async function test(){
-  $('log').textContent='';
   for(const t of ['user_profiles','communes']){
     const {data,error}=await sb.from(t).select('*').limit(3);
     log(t+': '+(error?'ERÈ '+error.message:data.length+' liy\n'+JSON.stringify(data,null,1)));
@@ -35,9 +34,15 @@ function show(s){
   if(s){$('who').textContent='Konekte: '+s.user.email;test();}
 }
 $('go').onclick=async()=>{
-  $('log').textContent='Ap konekte...';
-  const {error}=await sb.auth.signInWithPassword({email:$('e').value.trim(),password:$('p').value});
-  if(error)$('log').textContent='ERÈ: '+error.message;
+  const email=$('e').value;
+  const password=$('p').value;
+  $('log').textContent='Pwojè: '+URL_+'\n'
+    +'Imèl ['+email+'] = '+email.length+' karaktè\n'
+    +'Modpas ['+password+'] = '+password.length+' karaktè\nAp konekte...\n';
+  try{
+    const {error}=await sb.auth.signInWithPassword({email:email.trim(),password:password});
+    if(error)log('ERÈ: '+error.message+' | status='+error.status+' | code='+(error.code||''));
+  }catch(x){log('ERÈ REZO: '+x.message);}
 };
 $('out').onclick=()=>sb.auth.signOut();
 sb.auth.onAuthStateChange((_ev,s)=>show(s));
